@@ -1,10 +1,5 @@
-//
-//  location.cpp
-//  Lab 5
-//
-//  Created by Henry on 10/22/14.
-//  Copyright (c) 2014 Henry Bayuzick. All rights reserved.
-//
+// Lab 5
+// Henry and Adam
 
 #include "location.h"
 
