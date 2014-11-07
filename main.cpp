@@ -20,6 +20,7 @@ int mouseRow = -1;
 int mouseColumn = -1;
 int piecesOfCheese = 0;
 int mouseMoves = 0;
+int mouseDead = 0;
 
 int currentRow = -1;
 int currentColumn = -1;
@@ -40,6 +41,7 @@ void moveLeft();
 void moveAbove();
 void moveBelow();
 
+void checkForCheese();
 
 int main() {
     
@@ -64,10 +66,11 @@ int main() {
         
         mazeInput >> mouseRow >> mouseColumn;
         
-        mouseLocations[0].setLocation("mouse", mouseRow, mouseColumn);
+        mouseLocations[0].setLocation(mouseRow, mouseColumn);
         
         cout << "The mouse is located at: " << mouseLocations[0].getRow() << "x" << mouseLocations[0].getColumn() << endl;
-        rowsByColumns[mouseLocations[0].getRow()-1][mouseLocations[0].getColumn()-1] = 'M';
+        rowsByColumns[mouseLocations[0].getRow()][mouseLocations[0].getColumn()] = 'M';
+        mouseLocation(currentRow, currentColumn);
         
         mazeInput >> piecesOfCheese;
         
@@ -79,56 +82,38 @@ int main() {
             
             mazeInput >> cheeseRow >> cheeseColumn;
             
-            cheeseLocations[i].setLocation("cheese", cheeseRow, cheeseColumn);
-            rowsByColumns[cheeseLocations[i].getRow()-1][cheeseLocations[i].getColumn()-1] = 'c';
+            cheeseLocations[i].setLocation(cheeseRow, cheeseColumn);
+            rowsByColumns[cheeseLocations[i].getRow()][cheeseLocations[i].getColumn()] = 'c';
             
             cout << "Cheese located at: " << cheeseLocations[i].getRow() << "x" << cheeseLocations[i].getColumn() << endl;
+            printMaze();
         }
+        
+        
     }
     
     else {
         cout << "\nUnable to open file.\n";
     }
     
-    cout << "Map" << endl;
-    printMaze();
+    cout << "Mouses current location is: " << currentRow << "x" << currentColumn << endl;
     
     while (piecesOfCheese > 0) {
-        mouseLocation(currentRow, currentColumn);
-        
-        cout << "Mouses current location is: " << currentRow << "x" << currentColumn << endl;
-        
-        if (rowsByColumns[currentRow][currentColumn] == 'c') {
-            cout << "You've found cheese!" << endl;
-            piecesOfCheese--;
-            rowsByColumns[currentRow][currentColumn] = 'm';
-            cout << piecesOfCheese << " pieces of cheese left." << endl;
+        if (mouseDead == 1) {
+            break;
         }
-        else {
-            mouseMove();
-        }
-        
+        mouseMove();
     }
-    cout << checkRight(tempRow,tempColumn) << endl;
-    cout << checkLeft(tempRow,tempColumn) << endl;
-    cout << checkAbove(tempRow,tempColumn) << endl;
-    cout << checkBelow(tempRow,tempColumn) << endl;
+    
+    if (mouseDead == 1) {
+        cout << "Couldn't find all the cheese. The mouse died.\n";
+    }
+    
+    else {
+        cout << "The mouse found all the cheese! The mouse survived.\n";
+    }
     
     mazeInput.close();
-    
-//    get location
-//    if (location == cheese location)
-//        found it
-//        else
-//            check all around
-//            if (not + or m)
-//                get locations of . (rows, columns) and store in array
-//                mark current location as "m"
-//                if multiple locations in array
-//                    add location of (rows, columns) intersection to stack to later backtrack
-//                    out of the multiple multiple moves, take first available move
-//                    else
-//                        make only available move
 
 }
 
@@ -141,9 +126,17 @@ void printMaze() {
     }
 }
 
+void checkForCheese() {
+    if (rowsByColumns[currentRow][currentColumn] == 'c') {
+        cout << "You've found cheese!" << endl;
+        piecesOfCheese--;
+        cout << piecesOfCheese << " pieces of cheese left." << endl;
+    }
+}
+
 void mouseLocation(int &row, int &column) {
-    row = mouseLocations[mouseMoves].getRow()-1;
-    column = mouseLocations[mouseMoves].getColumn()-1;
+    row = mouseLocations[mouseMoves].getRow();
+    column = mouseLocations[mouseMoves].getColumn();
 }
 
 char checkRight() {
@@ -163,21 +156,83 @@ char checkBelow() {
 }
 
 void mouseMove() {
-    if (checkRight() == '.') {
+    if (checkRight() == '.' || checkRight() == 'c') {
         moveRight();
     }
-    else if (checkLeft() == '.') {
+    else if (checkLeft() == '.' || checkLeft() == 'c') {
         moveLeft();
     }
-    else if (checkAbove() == '.') {
-        moveUp();
+    else if (checkAbove() == '.' || checkAbove() == 'c') {
+        moveAbove();
     }
-    else if (checkBelow() == '.') {
-        moveDown();
+    else if (checkBelow() == '.' || checkBelow() == 'c') {
+        moveBelow();
     }
     else {
-        currentRow = mouseLocations[mouseMoves-1].getRow();
-        currentColumn = mouseLocations[mouseMoves-1].getColumn();
-        mouseMoves--;
+        cout << mouseMoves;
+        if (mouseMoves == 0) {
+            mouseDead = 1;
+        }
+        else {
+            cout << "Moved to checkpoint \n";
+            rowsByColumns[currentRow][currentColumn] = 'm';
+            currentRow = mouseLocations[mouseMoves-1].getRow();
+            currentColumn = mouseLocations[mouseMoves-1].getColumn();
+            mouseLocation(currentRow, currentColumn);
+            rowsByColumns[currentRow][currentColumn] = 'M';
+            printMaze();
+            mouseMoves--;
+        }
     }
+}
+
+void moveRight() {
+    cout << "Moved right \n";
+    mouseMoves++;
+    rowsByColumns[currentRow][currentColumn] = 'm';
+    mouseLocations[mouseMoves].setLocation(currentRow, currentColumn+1);
+    mouseLocation(currentRow, currentColumn);
+    checkForCheese();
+    rowsByColumns[currentRow][currentColumn] = 'M';
+    printMaze();
+    cout << mouseMoves;
+    cout << "Mouses current location is: " << currentRow << "x" << currentColumn << endl;
+}
+
+void moveLeft() {
+    cout << "Mouses current location is: " << currentRow << "x" << currentColumn << endl;
+    cout << "Moved left \n";
+    mouseMoves++;
+    rowsByColumns[currentRow][currentColumn] = 'm';
+    mouseLocations[mouseMoves].setLocation(currentRow, currentColumn-1);
+    mouseLocation(currentRow, currentColumn);
+    checkForCheese();
+    rowsByColumns[currentRow][currentColumn] = 'M';
+    printMaze();
+     cout << mouseMoves;
+    cout << "Mouses current location is: " << currentRow << "x" << currentColumn << endl;
+}
+
+void moveAbove() {
+    cout << "Moved above \n";
+    mouseMoves++;
+    rowsByColumns[currentRow][currentColumn] = 'm';
+    mouseLocations[mouseMoves].setLocation(currentRow-1, currentColumn);
+    mouseLocation(currentRow, currentColumn);
+    checkForCheese();
+    rowsByColumns[currentRow][currentColumn] = 'M';
+    printMaze();
+    cout << "Mouses current location is: " << currentRow << "x" << currentColumn << endl;
+}
+
+void moveBelow() {
+    cout << "Moved below \n";
+    mouseMoves++;
+    rowsByColumns[currentRow][currentColumn] = 'm';
+    mouseLocations[mouseMoves].setLocation(currentRow+1, currentColumn);
+    mouseLocation(currentRow, currentColumn);
+    checkForCheese();
+    rowsByColumns[currentRow][currentColumn] = 'M';
+    printMaze();
+    cout << "Mouses current location is: " << currentRow << "x" << currentColumn << endl;
 }

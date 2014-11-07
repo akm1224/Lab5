@@ -3,8 +3,7 @@
 
 #include "location.h"
 
-void Location::setLocation (string newType, int newRow, int newColumn) {
-    type = newType;
+void Location::setLocation (int newRow, int newColumn) {
     row = newRow;
     column = newColumn;
 }
